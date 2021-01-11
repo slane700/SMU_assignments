@@ -12,7 +12,7 @@ class ScrapeMars():
     def init_browser(self):
         # @NOTE: Replace the path with your actual path to the chromedriver
         executable_path = {'executable_path': ChromeDriverManager().install()}
-        browser = Browser('chrome', **executable_path, headless=False)
+        browser = Browser('chrome', **executable_path, headless=True)
         return browser
 
 
