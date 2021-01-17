@@ -16,17 +16,35 @@ $(document).ready(function(){
 });
 function buildTable() {
     var dateFilter = $("#datetime").val(); //gets input value to filter
+    var cityFilter = $("#city").val().toLowerCase();
+    var stateFilter = $("#state").val().toLowerCase(); 
+    var countryFilter = $("#country").val().toLowerCase(); 
+    var shapeFilter = $("#shape").val().toLowerCase(); 
 
-    if (dateFilter === "") {
-        buildTableString(tableData);
-    } else {
-        var filteredData = data.filter(row => row.datetime === dateFilter);
-        if (filteredData.length === 0) {
-            alert("Invalid Date Discovered!");
-        }
 
-        buildTableString(filteredData);
+    //applying fliters
+    var filteredData = tableData
+
+    if (dateFilter !== ""){
+        filteredData = filteredData.filter(row => row.datetime === dateFilter);
     }
+    if (cityFilter !== ""){
+        filteredData = filteredData.filter(row => row.city === cityFilter);
+    }
+    if (stateFilter !== ""){
+        filteredData = filteredData.filter(row => row.state === stateFilter);
+    }
+    if (countryFilter !== ""){
+        filteredData = filteredData.filter(row => row.country === countryFilter);
+    }
+    if (shapeFilter !== ""){
+        filteredData = filteredData.filter(row => row.shape === shapeFilter);
+    }
+    if (filteredData.length === 0) {
+        alert("Invalid Date Discovered!");
+    }
+
+    buildTableString(filteredData);
 }
 
 function buildTableString(data) {
