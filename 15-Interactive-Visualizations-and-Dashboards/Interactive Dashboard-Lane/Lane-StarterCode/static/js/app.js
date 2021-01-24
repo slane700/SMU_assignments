@@ -1,96 +1,120 @@
+var allData = []; 
 $(document).ready(function() {
-    dropDown();  
-    buildCharts();
+    init(); 
+
     $("#selDataset").change(function() {
-        getdemoInfo(); 
+        doWork(); 
     });
 
 });
 
-function buildCharts(){
-    d3.json("samples.json").then(sampledata => {
-        console.log(sampledata)
-        var ids = sampledata.samples[0].otu_ids.slice(0,10);
-        console.log(ids)
-        var sampleValues =  sampledata.samples[0].sample_values.slice(0,10);
-        console.log(sampleValues)
-        var otu_labels =  sampledata.samples[0].otu_labels.slice(0,10);
-        console.log(otu_labels)
+function init(){ 
+    d3.json("samples.json").then((data) => {
+        allData = data;
+        dropDown(data); 
+        doWork(data);
+    }); 
+}; 
+function doWork (){
+    var sample = parseInt($("#selDataset").val()); 
+    var meta = allData.metadata.filter( x=> x.id === sample)[0]; 
+    var sampleData = allData.samples.filter(x => x.id == sample)[0]; 
+    
+    demographics(meta); 
+    buildCharts(sampleData, meta); 
+}; 
+function buildCharts(sampleData, meta){ 
+    barGraph(sampleData); 
+    bubbleGraph(sampleData); 
+    guage(meta); 
 
-        var OTU_id = ids.map(d => "OTU " + d);
-        console.log(`OTU IDS: ${OTU_id}`)
+}; 
+function barGraph(sampleData){
+   var OTU_id = sampleData.otu_ids.slice(0, 10).reverse().map(x=> `OTU ID: ${x}`); 
+   console.log(OTU_id)
     //bar chart documentation 
-    var data = [{
-        type: 'bar',
-        x: sampleValues,
+    var trace = [{
+        x: sampleData.sample_values.slice(0, 10).reverse(),
         y: OTU_id,
+        text: sampleData.otu_labels.slice(0, 10).reverse(),
+        type: 'bar',
         orientation: 'h'
         }];
-            
-    Plotly.newPlot('bar', data);
+    var layout = {
+        title: "Top 10 Bacteria Present in Belly Button", 
+        xaxis: {title: "Amount of Bacteria"}, 
+        yaxis: {title: "Bacteria ID"}
+    }
 
+    var traces = [trace]; 
+
+    Plotly.newPlot('bar', traces, layout);
+
+}; 
+
+function bubbleGraph(sampleData){
 //bubble chart documenttaion 
-    var trace1 = {
-        x: OTU_id,
-        y: sampleValues,
-        text: otu_labels,
+    var trace = {
+        x: sampleData.otu_ids,
+        y:  sampleData.sample_values,
+        text: sampleData.otu_labels,
         mode: 'markers',
         marker: {
-            color: OTU_id,
-            size: sampleValues
+            color: sampleData.sample_values,
+            size: sampleData.otu_ids
         }
-    };
-    
-    var data = [trace1];
-    
+    }
+    var traces = [trace];
     var layout = {
-        title: 'Bubble Chart Hover Text',
+        title: 'Amount of Bacteria',
         showlegend: false,
-        height: 600,
-        width: 600
+        xaxis: {title: "Amount of Bacteria"}, 
+        yaxis: {title: "Bacteria ID"}
     };
-    
-    Plotly.newPlot('bubble', data, layout);
-}); 
-//guage chart documentations 
-    var data = [
+
+    Plotly.newPlot('bubble', traces, layout);
+}; 
+
+function guage(meta){ 
+    //guage chart documentations 
+    var trace = [
         {
             domain: { x: [0, 1], y: [0, 1] },
-            value: 270,
-            title: { text: "Speed" },
+            value: meta,
+            title: { text: "Belly Button Washing Frequency" },
             type: "indicator",
+            guage: {
+                axis: {range: [null, 10]}, 
+                steps: [
+                    {range: [0,7], color: "light-pink"},
+                    {range: [7,10], color: "pink"}
+                ], 
+                threshold: {
+                    line: {color: "red", width: 4}, 
+                    thickness: 0.75, 
+                    value: 2
+                }
+
+            }, 
             mode: "gauge+number"
         }
-];
+    ];
+    var layout = {};
+    Plotly.newPlot('gauge', trace, layout);
+    }; 
 
-    var layout = { width: 600, height: 500, margin: { t: 0, b: 0 } };
-    Plotly.newPlot('guafe', data, layout);
-}
+
     
 function dropDown(){
     var dropdown = d3.select("#selDataset"); 
-
-    d3.json("samples.json").then((data)=> {
-        // get the id data to the dropdown menu
-        data.names.forEach(function(name) {
-            dropdown.append("option").text(name).property("value");
+    allData.names.forEach(function(name) {
+        dropdown.append("option").text(name).property("value");
         });
-    })}
+};
 
-// function getdemoInfo() {
-//     d3.json("samples.json").then((data)=> {
-//     var metadata= data.metadata;
-//     console.log(metadata)
-   
-    
-//     var select = $("#sample-metadata");
-//     select.html(""); 
-//     Object.entries(??).forEach(([key,value]) =>{
-//         select
-//           .append('p').text(`${key} : ${value}`)
-//           .append('hr')
-
-
-//     }); 
-// })
-// }
+function demographics(meta){ 
+    Object.entries(meta).forEach(function(keyValue, index){
+        var entry = `<span><b>${keyValue[0]}:</b> ${keyValue[1]}</span><br>`;
+        $("#sample-metadata").append(entry); 
+    })
+}
