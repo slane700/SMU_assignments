@@ -42,12 +42,29 @@ function barGraph(sampleData){
         y: OTU_id,
         text: sampleData.otu_labels.slice(0, 10).reverse(),
         type: 'bar',
-        orientation: 'h'
+        orientation: 'h',
+        marker: {color:'rgba(222,45,38,0.8)'}
         };
     var layout = {
         title: "Top 10 Bacteria Present in Belly Button", 
-        xaxis: {title: "Amount of Bacteria"}, 
-        yaxis: {title: "Bacteria ID"}
+        xaxis: {
+            title: "Amount of Bacteria",
+            tickangle: -45,
+            titlefont: {
+                size: 16,
+                color: 'rgb(107, 107, 107)'
+              },
+          },
+        yaxis: {
+            title: "Bacteria ID", 
+            titlefont: {
+                size: 16,
+                color: 'rgb(107, 107, 107)'
+              },
+              tickfont: {
+                size: 8,
+                color: 'rgb(107, 107, 107)'
+        }}
     }
 
     var traces = [trace]; 
@@ -86,17 +103,12 @@ function guage(meta){
             value: meta.wfreq,
             title: { text: "Belly Button Washing Frequency" },
             type: "indicator",
-            guage: {
+            gauge: {
+                bar: { color:'rgba(222,45,38,0.8)'},
                 axis: {range: [null, 10]}, 
                 steps: [
-                    {range: [0,7], color: "light-pink"},
-                    {range: [7,10], color: "pink"}
-                ], 
-                threshold: {
-                    line: {color: "red", width: 4}, 
-                    thickness: 0.75, 
-                    value: 2
-                }
+                    {range: [0,7], color: "white"},
+                    {range: [7,10], color: "grey"}]
 
             }, 
             mode: "gauge+number"
