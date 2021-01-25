@@ -48,7 +48,7 @@ function barGraph(sampleData){
     var layout = {
         title: "Top 10 Bacteria Present in Belly Button", 
         xaxis: {
-            title: "Amount of Bacteria",
+            title: "Amount of Bacteria (OTU, operational taxonomic unit)",
             tickangle: -45,
             titlefont: {
                 size: 16,
@@ -56,7 +56,7 @@ function barGraph(sampleData){
               },
           },
         yaxis: {
-            title: "Bacteria ID", 
+            title: "Bacteria OTU ID", 
             titlefont: {
                 size: 16,
                 color: 'rgb(107, 107, 107)'
@@ -87,9 +87,20 @@ function bubbleGraph(sampleData){
     };
     var traces = [trace];
     var layout = {
-        title: 'Amount of Bacteria',
-        xaxis: {title: "Amount of Bacteria"}, 
-        yaxis: {title: "Bacteria ID"}
+        title: 'Amount of Each Bacteria Present',
+        xaxis: {title: "Bacteria OTU ID",
+        titlefont: {
+            size: 14,
+            color: 'rgb(107, 107, 107)'
+          }},
+        yaxis: {title: "Amount of Bacteria (OTU, operational taxonomic unit)",
+            titlefont: {
+            size: 14,
+            color: 'rgb(107, 107, 107)',
+        },
+            tickfont: {
+                size: 10,
+        }}
     }
 
     Plotly.newPlot('bubble', traces, layout);
@@ -101,7 +112,7 @@ function guage(meta){
         {
             domain: { x: [0, 1], y: [0, 1] },
             value: meta.wfreq,
-            title: { text: "Belly Button Washing Frequency" },
+            title: { text: "Number of Times Belly Button Washed per Week", font: { size: 14 }}, 
             type: "indicator",
             gauge: {
                 bar: { color:'rgba(222,45,38,0.8)'},
