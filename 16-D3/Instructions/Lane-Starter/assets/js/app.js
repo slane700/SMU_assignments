@@ -1,14 +1,19 @@
 $(document).ready(function() {
     makeGraph();
+
+    $(window).resize(function() {
+        makeGraph();
+    });
+
 });
 
 function makeGraph() {
-    d3.csv("assets/data/data.csv").then(function(data) {
-        console.log(data);
+    d3.csv("assets/data/data.csv").then(function(censusData) {
+        console.log(censusData);
 
         $("#scatter").empty(); 
 
-        var svgWidth = window.innerWiddth; 
+        var svgWidth = window.innerWidth; 
         var svgHeight = 500; 
 
         var margin = { 
@@ -31,16 +36,16 @@ function makeGraph() {
             .attr("transform", `translate(${margin.left}, ${margin.top})`); 
 
 
-        data.forEach(function(row) {
+         censusData.forEach(function(row) {
             row.poverty = +row.poverty; 
             row.healthcare = +row.healthcare; 
         }); 
         var xScale = d3.scaleLinear()
-            .domain(d3.extent(data, d => d.poverty))
+            .domain(d3.extent(censusData, d => d.poverty))
             .range([0, chartWidth]); 
         
         var  yScale = d3.scaleLinear()
-            .domain(d3.extent(data, d => d.healthcare))
+            .domain(d3.extent(censusData, d => d.healthcare))
             .range([chartHeight, 0]); 
         
         var leftAxis = d3.axisLeft(yScale); 
@@ -50,12 +55,12 @@ function makeGraph() {
             .attr("transform", `translate(0, ${chartHeight})`)
             .call(bottomAxis)
 
-        .chartGroup.append("g")
+        chartGroup.append("g")
             .call(leftAxis); 
 
         var textGroup = chartGroup.append("g")
             .selectAll("text")
-            .data(data)
+            .data(censusData)
             .enter()
             .append("text")
             .text(d => d.abbr)
@@ -65,12 +70,11 @@ function makeGraph() {
         
         var circlesGroup = chartGroup.append("g")
             .selectAll("circle")
-            .data(data)
+            .data(censusData)
             .enter()
             .append("circle")
-            .style("opacity", 0.25)
             .attr("stroke-width", "1")
-            .classes("stateCircle", true); 
+            .classed("stateCircle", true); 
         
         chartGroup.selectAll("circle")
             .transition()
@@ -78,10 +82,9 @@ function makeGraph() {
             .attr("cx", d => xScale(d.poverty))
             .attr("cy", d => yScale(d.healthcare))
             .attr("r", "15")
-            .style("opacity", 0.25)
             .delay(function(d,i){return i * 100}); 
 
-        chartGroup.selectA;;(".stateText")
+        chartGroup.selectAll(".stateText")
             .transition()
             .duration(5000)
             .attr("x", d => xScale(d.poverty))
@@ -89,18 +92,51 @@ function makeGraph() {
             .delay(function(d,i){return i * 100}); 
         
         chartGroup.append("text")
-            .attr("transform", "rotate(=90)")
+            .attr("transform", "rotate(-90)")
             .attr("y", 0 - margin.left + 0)
             .attr("x", 0 - (chartHeight / 2))
             .attr("dy", "1em")
             .attr("class", "axisText")
-            .attr("Lacks Healthcare %"); 
+            .text("Lacks Healthcare %"); 
         
         chartGroup.append("text")
-            .attr("transform" `translate(${chartWidth /2}, ${chartHeight + margin.top +
-             30 })`)
-             .attr("class", "axisText")
-             .text("Poverty %")
+            .attr("transform" ,`translate(${chartWidth /2}, ${chartHeight + margin.top + 30 })`)
+            .attr("class", "axisText")
+            .text("Poverty %")
+        
+            var toolTip = d3.tip()
+            .attr("class", "d3-tip")
+            .offset([180, -60])
+            .html(function(d) {
+                return (`${d.state}<br>Poverty: ${d.poverty}%><br>Lacks Healthcare: ${d.healthcare}%`);
+            });
+
+        // Step 2: Create the tooltip in chartGroup.
+        circlesGroup.call(toolTip);
+
+        // Step 3: Create "mouseover" event listener to display tooltip
+        circlesGroup.on("mouseover", function(event, d) {
+                toolTip.show(d, this);
+
+                //make bubbles big
+                d3.select(this)
+                    .transition()
+                    .duration(1000)
+                    .attr("r", 100);
+            })
+            // Step 4: Create "mouseout" event listener to hide tooltip
+            .on("mouseout", function(event, d) {
+                toolTip.hide(d);
+
+                d3.select(this)
+                    .transition()
+                    .duration(1000)
+                    .attr("r", 15);
+            });
+
+    }).catch(function(error) {
+        console.log(error);
+
 
 
     });
