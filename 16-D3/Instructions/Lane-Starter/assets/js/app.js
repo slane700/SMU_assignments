@@ -97,12 +97,12 @@ function makeGraph() {
             .attr("x", 0 - (chartHeight / 2))
             .attr("dy", "1em")
             .attr("class", "axisText")
-            .text("Lacks Healthcare %"); 
+            .text("Lacks Healthcare (%)"); 
         
         chartGroup.append("text")
             .attr("transform" ,`translate(${chartWidth /2}, ${chartHeight + margin.top + 30 })`)
             .attr("class", "axisText")
-            .text("Poverty %")
+            .text("Poverty (%)")
         
             var toolTip = d3.tip()
             .attr("class", "d3-tip")
