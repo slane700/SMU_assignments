@@ -40,6 +40,7 @@ function makeGraph() {
             row.poverty = +row.poverty; 
             row.healthcare = +row.healthcare; 
         }); 
+
         var xScale = d3.scaleLinear()
             .domain(d3.extent(censusData, d => d.poverty))
             .range([0, chartWidth]); 
@@ -53,7 +54,7 @@ function makeGraph() {
 
         chartGroup.append("g")
             .attr("transform", `translate(0, ${chartHeight})`)
-            .call(bottomAxis)
+            .call(bottomAxis);
 
         chartGroup.append("g")
             .call(leftAxis); 
@@ -65,8 +66,9 @@ function makeGraph() {
             .append("text")
             .text(d => d.abbr)
             .attr("alignment-baseline", "central")
-            .attr("font-size", 12)
-            .classed("stateText", true); 
+            .attr("font-size", 15)
+            .classed("stateText", true);
+
         
         var circlesGroup = chartGroup.append("g")
             .selectAll("circle")
@@ -74,6 +76,7 @@ function makeGraph() {
             .enter()
             .append("circle")
             .attr("stroke-width", "1")
+            .style("opacity", 0.25)
             .classed("stateCircle", true); 
         
         chartGroup.selectAll("circle")
@@ -82,6 +85,7 @@ function makeGraph() {
             .attr("cx", d => xScale(d.poverty))
             .attr("cy", d => yScale(d.healthcare))
             .attr("r", "15")
+            .style("opacity", 0.25)
             .delay(function(d,i){return i * 100}); 
 
         chartGroup.selectAll(".stateText")
@@ -104,17 +108,17 @@ function makeGraph() {
             .attr("class", "axisText")
             .text("Poverty (%)")
         
-            var toolTip = d3.tip()
+        var toolTip = d3.tip()
             .attr("class", "d3-tip")
-            .offset([180, -60])
+            .offset([120, -20])
             .html(function(d) {
                 return (`${d.state}<br>Poverty: ${d.poverty}%><br>Lacks Healthcare: ${d.healthcare}%`);
             });
 
-        // Step 2: Create the tooltip in chartGroup.
+
         circlesGroup.call(toolTip);
 
-        // Step 3: Create "mouseover" event listener to display tooltip
+       
         circlesGroup.on("mouseover", function(event, d) {
                 toolTip.show(d, this);
 
@@ -122,9 +126,9 @@ function makeGraph() {
                 d3.select(this)
                     .transition()
                     .duration(1000)
-                    .attr("r", 100);
+                    .attr("r", 50);
             })
-            // Step 4: Create "mouseout" event listener to hide tooltip
+         
             .on("mouseout", function(event, d) {
                 toolTip.hide(d);
 
