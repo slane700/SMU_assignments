@@ -1,37 +1,23 @@
-$(document).ready(function(){
-    makeMap(); 
-
-    $("timeFrame").change(function(){
-        makeMap(); 
-    });
-
+$(document).ready(function() {
+    makeMap();
 });
 
 function makeMap() {
-    var timeFrame_text = $("timeFrame option:selected").text(); 
-    $("mapTitle").text(`Earthquakes Recorded during the ${timeFrame_text}`); 
+    // data
+    // Store our API endpoint as queryUrl
+    // var queryUrl = "http://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2014-01-01&endtime=" +
+    //     "2014-01-02&maxlongitude=-69.52148437&minlongitude=-123.83789062&maxlatitude=48.74894534&minlatitude=25.16517337";
 
-    var timeFrame = $("#timeFrame").val(); 
+    var queryUrl = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson"
 
-    var queryURL = `https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/${timeFrame}.geojson`
-
+    // Perform a GET request to the query URL
     $.ajax({
         type: "GET",
-        url: queryURL,
-        success: function(earthquake_data) {
-            // make second call
-            // $.ajax({
-            //     type: "GET",
-            //     url: "/static/data/PB2002_boundaries.json",
-            //     success: function(tectonic) {
-            //         //BUILD WITH BOTH DATASETS
-            //         buildmap(earthquake_data, tectonic);
-            //     },
-            //     error: function(XMLHttpRequest, textStatus, errorThrown) {
-            //         alert("Status: " + textStatus);
-            //         alert("Error: " + errorThrown);
-            //     }
-            // });
+        url: queryUrl,
+        success: function(data) {
+            console.log(data.features);
+
+            buildMap(data);
         },
         error: function(XMLHttpRequest, textStatus, errorThrown) {
             alert("Status: " + textStatus);
@@ -40,11 +26,8 @@ function makeMap() {
     });
 }
 
-function buildmap(earthquake_data, tectonic){
-    $("#mapcontainer").empty();
-    $("#mapcontainer").append(`<div id="mapid"></div>`);
-
-    var darkMode = L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
+function buildMap(data) {
+    var dark_mode = L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
         attribution: "© <a href='https://www.mapbox.com/about/maps/'>Mapbox</a> © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> <strong><a href='https://www.mapbox.com/map-feedback/' target='_blank'>Improve this map</a></strong>",
         tileSize: 512,
         maxZoom: 18,
@@ -53,7 +36,7 @@ function buildmap(earthquake_data, tectonic){
         accessToken: API_KEY
     });
 
-    var lightMode = L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
+    var light_mode = L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
         attribution: "© <a href='https://www.mapbox.com/about/maps/'>Mapbox</a> © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> <strong><a href='https://www.mapbox.com/map-feedback/' target='_blank'>Improve this map</a></strong>",
         tileSize: 512,
         maxZoom: 18,
@@ -62,112 +45,112 @@ function buildmap(earthquake_data, tectonic){
         accessToken: API_KEY
     });
 
-    var myMap = L.map("mapid", {
-        center: [33.0, -96.0],
-        zoom: 4,
-        layers: [lightMode, darkMode]
+    var myMap = L.map("map", {
+        center: [15.5994, -28.6731],
+        zoom: 5,
+        layers: [light_mode, dark_mode]
     });
 
-    var earthquakes = []; 
-    var circle_list = []; 
-
-    earthquake_data.features.forEach(function(earthquake){
+    var earthquakes = [];
+    var circle_list = [];
+    data.features.forEach(function(earthquake) {
         var marker = L.geoJSON(earthquake, {
             onEachFeature: onEachFeature
-        }); 
-        earthquakes.push(marker); 
+        });
+        earthquakes.push(marker);
+
 
         var circle = L.geoJSON(earthquake, {
-            pointtolayer: function(feature, latlng) {
-                var geoJSONmarkerOptions = createmarkerOptions(feature); 
-                return L.circlemarker(latlng,geoJSONmarkerOptions); 
-            }, 
+            pointToLayer: function(feature, latlng) {
+                var geojsonMarkerOptions = makeMarkerOptions(feature)
+                return L.circleMarker(latlng, geojsonMarkerOptions);
+            },
             onEachFeature: onEachFeature
-        }); 
+        });
+        circle_list.push(circle);
+    });
 
-    }); 
+    var marker_group = L.layerGroup(earthquakes);
+    var marker_group2 = L.layerGroup(circle_list);
 
-    var tectonicPlates = L.geoJSON(tectonic, {
-        color: "Red", 
-        weight: 2
-    }); 
-
-    var markerGroup = L.layerGroup(earthquakes)
-    var markerGroup2 = L.layerGroup(circle_list)
-    var markerGroup3 = L.layerGroup([tectonicPlates])
-
+ // Create Layer Legend
     var baseMaps = {
-        "Light Mode": lightMode, 
-        "Dark Mode" : darkMode 
-    }; 
+        "Light Mode": light_mode,
+        "Dark Mode": dark_mode
+    };
 
     var overlayMaps = {
-         "Markers": markerGroup, 
-        "Circles": markerGroup2, 
-        "Tectonic Plates" : markerGroup3
-    }; 
+        "Markers": marker_group,
+        "Circles": marker_group2
+    };
 
-    L.control.layers(baseMaps, overlayMaps).addTo(myMap); 
+    // Slap Layer Legend onto the map
+    L.control.layers(baseMaps, overlayMaps).addTo(myMap);
 
-    markerGroup3.addTo(myMap); 
-    markerGroup3.addTo(myMap); 
 
-    var legend = L.control({position: "topright"}); 
+    var legend = L.control({ position: "topright"});
     legend.onAdd = function() {
-        var div = L.DomUtil.create("div", "info legend"); 
+        var div = L.DomUtil.create("div", "info legend");
 
-        var legendinfo = `<h4 style = "margin-bottom:10px"> Earthquake Depth </h4>
+        // create legend as raw html
+        var legendInfo = `<h5> Earthquake Depth</h4>
         <div>
-        <div style = "background:#98ee00;height:10px;width:10px;display:inline-block"> </div>
-        </div> 
-        <div>
-        <div style = "background:#d4ee00;height:10px;width:10px;display:inline-block"></div> 
-        <div style = "display:inline-block">10 - 30 Miles</div>
+            <div style ="background:#4169E1;height:10px; width:10px;display:inline-block"></div>
+            <div style= display:inline-block>Less than 10</div>
         </div>
         <div>
-        <div style = "background:#eecc00;height:10px;width:10px;display:inline-block"></div>
-        <div style = "display:inline-block">30 - 50 Miles</div>
+            <div style ="background:#0000CD;height:10px; width:10px;display:inline-block"></div>
+            <div style= display:inline-block>10 - 30</div>
         </div>
         <div>
-        <div style = "background:#ee9c00;height:10px;width:10px;display:inline-block"></div> 
-        <div style = "display:inline-block">50 - 70 Miles</div>
+            <div style ="background:#00BFFF;height:10px; width:10px;display:inline-block"></div>
+            <div style= display:inline-block>30 - 50</div>
         </div>
         <div>
-        <div style = "background:#ea822c;height:10px;width:10px;display:inline-block"></div>
-        <div style = "display:inline-block">70 - 90 Miles</div>
-        </div> 
+            <div style ="background:#00ffff;height:10px; width:10px;display:inline-block"></div>
+            <div style= display:inline-block>50 - 70</div>
+        </div>
         <div>
-        <div style = "background:#ea2c2c;height:10px;width:10px;display:inline-block"></div>
-        <div style = "display:inline-block">Greater than 90 Miles</div>
+            <div style ="background:#008b8b;height:10px; width:10px;display:inline-block"></div>
+            <div style= display:inline-block>70 - 90</div>
+        </div>
+        <div>
+            <div style ="background:#006400;height:10px; width:10px;display:inline-block"></div>
+            <div style= display:inline-block>Greater than 90</div>
         </div>`;
-
-        div.innerHTML = legendinfo; 
-        return(div)
+    div.innerHTML = legendInfo; 
+    return div
     }
 
-    legend.addTo(myMap); 
+    legend.addTo(myMap)
 }
 
-function createMarkerOptions(feature) {
-    var depth = feature.geometry.coordinates[2];
-    var depthcolor = "";
-    if (depth > 90) {
-        depthcolor = "#ea2c2c";
-    } else if (depth > 70) {
-        depthcolor = "#ea822c";
+
+
+
+
+function makeMarkerOptions(feature){
+    console.log(feature); 
+    
+    var depth = (feature.geometry.coordinates[2])
+    var depthColor = "";
+    if (depth >90) {
+        depthColor = "#006400";
+    } else if (depth >70) {
+        depthColor = "#008b8b";
     } else if (depth > 50) {
-        depthcolor = "#ee9c00";
+        depthColor = "#00ffff"
     } else if (depth > 30) {
-        depthColor = "#eecc00";
-    } else if (depth > 10) {
-        depthcolor = "#d4ee00";
+        depthColor = "#00BFFF"
+    } else if (depth >10) {
+        depthColor = "#0000CD"
     } else {
-        depthcolor = "#98ee00";
+        depthColor = "#4169E1"
     }
 
-
+    
     var geojsonMarkerOptions = {
-        radius: (feature.properties.mag * 5) + 1,
+        radius: (feature.properties.mag *5)+1,
         fillColor: depthColor,
         color: "#000",
         weight: 1,
@@ -175,13 +158,14 @@ function createMarkerOptions(feature) {
         fillOpacity: 0.8
     };
 
-    return (geojsonMarkerOptions)
+    return(geojsonMarkerOptions)
+
 }
 
-// called in the create circles
 function onEachFeature(feature, layer) {
     // does this feature have a property named popupContent?
     if (feature.properties && feature.properties.place) {
         layer.bindPopup(feature.properties.title);
     }
 }
+
