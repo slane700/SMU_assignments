@@ -27,12 +27,12 @@ function makeMap() {
 }
 
 function buildMap(data) {
-    var dark_mode = L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
+    var streets = L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
         attribution: "© <a href='https://www.mapbox.com/about/maps/'>Mapbox</a> © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> <strong><a href='https://www.mapbox.com/map-feedback/' target='_blank'>Improve this map</a></strong>",
         tileSize: 512,
         maxZoom: 18,
         zoomOffset: -1,
-        id: "mapbox/dark-v10",
+        id: "mapbox/streets-v11",
         accessToken: API_KEY
     });
 
@@ -46,9 +46,9 @@ function buildMap(data) {
     });
 
     var myMap = L.map("map", {
-        center: [15.5994, -28.6731],
+        center: [37.0902, -95.7129],
         zoom: 5,
-        layers: [light_mode, dark_mode]
+        layers: [streets, light_mode]
     });
 
     var earthquakes = [];
@@ -76,7 +76,7 @@ function buildMap(data) {
  // Create Layer Legend
     var baseMaps = {
         "Light Mode": light_mode,
-        "Dark Mode": dark_mode
+        "Streets Mode": streets
     };
 
     var overlayMaps = {
